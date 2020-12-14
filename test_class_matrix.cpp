@@ -40,9 +40,13 @@ int main() {
     std::cout << "Matrix test: " << std::endl;
     std::cout << test_matrix << std::endl;
     std::cout << "Appending matrix test: " << std::endl;
-    test_matrix.append_columns(2);
-    test_matrix.append_rows(3, 1);
+    test_matrix.m_append_columns(2);
+    test_matrix.m_append_rows(3, 1);
     std::cout << test_matrix << "\n" << std::endl;
+
+    // Strassen matrix algo test
+    std::cout << "Strassen matrix algo test: " << std::endl;
+    std::cout << test_matrix.strassen_multiplication(test_matrix-3) << std::endl;
 
     // -, *, +, << tests
     std::cout << coppied_matrix + coppied_matrix - coppied_matrix * coppied_matrix<< std::endl;

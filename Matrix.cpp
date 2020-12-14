@@ -115,7 +115,7 @@ const T& Matrix<T>::operator()(const unsigned& row, const unsigned& col) const n
 
 // matrix operators
 template <typename T>
-void Matrix<T>::append_columns(size_t n, const T initial_value) {
+void Matrix<T>::m_append_columns(size_t n, const T initial_value) {
     for (size_t i=0; i<this->f_num_rows; i++) {
         this->f_matrix_table[i].insert(this->f_matrix_table[i].end(), n, initial_value);
     }
@@ -123,7 +123,7 @@ void Matrix<T>::append_columns(size_t n, const T initial_value) {
 }
 
 template <typename T>
-void Matrix<T>::append_rows(size_t n, const T initial_value) {
+void Matrix<T>::m_append_rows(size_t n, const T initial_value) {
     this->f_matrix_table.resize(this->m_cols_size() + n-1);
     for (size_t i=0; i<n; i++) {
         this->f_matrix_table[this->m_cols_size()+i-1]=vector<T>(this->m_cols_size(), initial_value);
@@ -135,7 +135,7 @@ template <typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other) noexcept {
     if ( &other == this) {return *this;}
 
-    this->f_matrix_table = other.f_matrix_table;
+    this->f_matrix_table.assign(other.f_matrix_table.begin(), other.f_matrix_table.end());
     f_num_rows = other.f_num_rows;
     f_num_columns = other.f_num_columns;
 
@@ -248,6 +248,52 @@ Matrix<T> Matrix<T>::transpose() {
     return result;
 }
 
+// some algorithms
+template<typename T>
+Matrix<T>  Matrix<T>::strassen_multiplication(const Matrix<T>& other) const {
+    if (f_num_columns != other.f_num_columns || f_num_rows != other.f_num_rows) {
+        throw MatrixDimensionalException();
+    }
+
+    //base case
+    if (this->f_num_rows <= 2) { return (*this)*other; }
+
+    Matrix<T> first_matrix = *(this);
+    Matrix<T> second_matrix = other;
+
+    // append matrixs to [2^n * 2^n]
+    {
+        int size_diff = first_matrix.f_num_columns - first_matrix.f_num_rows;
+        if (size_diff < 0) {
+            first_matrix.m_append_columns(abs(size_diff), 0);
+            second_matrix.m_append_columns(abs(size_diff), 0);
+        }else if (size_diff > 0) {
+            first_matrix.m_append_rows(size_diff, 0);
+            second_matrix.m_append_rows(size_diff, 0);
+        }
+
+        size_diff = 0;
+        while ((this->m_cols_size()+size_diff)&(this->m_cols_size()+size_diff) != 0) { size_diff++; }
+        first_matrix.m_append_columns(size_diff, 0);
+        second_matrix.m_append_columns(size_diff, 0);
+        first_matrix.m_append_rows(size_diff, 0);
+        second_matrix.m_append_rows(size_diff, 0);
+    }
+
+    Matrix<T> a_1_1 = first_matrix.m_get_submatrix(0, first_matrix.m_rows_size()/2,
+                                                   0, first_matrix.m_cols_size()/2);
+    Matrix<T> a_2_1 = ()
+    Matrix<T> a_1_2 = ()
+    Matrix<T> a_2_2 = ()
+
+    Matrix<T> b_1_1 = ()
+    Matrix<T> b_2_1 = ()
+    Matrix<T> b_1_2 = ()
+    Matrix<T> b_2_2 = ()
+
+    return first_matrix;
+}
+
 // vector operators
 template<typename T>
 std::vector<T> Matrix<T>::operator*(const std::vector<T>& vect) const {
@@ -327,9 +373,3 @@ Matrix<T> Matrix<T>::operator/(const T& scalar) const noexcept {
 
     return result;
 }
-
-
-//template <typename T>
-//Matrix<T>& Matrix<T>::operator=-(const Matrix<T>& other) noexcept {
-//
-//}

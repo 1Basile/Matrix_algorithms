@@ -38,10 +38,13 @@ public:
     Matrix<T>  operator*(const Matrix<T>&)   const ;
     Matrix<T>& operator*=(const Matrix<T>&)        ;
 
+    // Some matrix algorithms
+    Matrix<T>  strassen_multiplication(const Matrix<T>&)   const ;
+
     // Matrix operations
     Matrix<T>  transpose();
-    void       append_rows(size_t n, T initial_value=0);
-    void       append_columns(size_t n, T initial_value=0);
+    void       m_append_rows(size_t n, T initial_value=0);
+    void       m_append_columns(size_t n, T initial_value=0);
 
     //Matrix-scalar operations
     Matrix<T>  operator+(const T&)  const noexcept;
