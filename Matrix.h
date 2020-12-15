@@ -101,8 +101,8 @@ public:
 
 private:
     std::vector<std::vector<T>> f_matrix_table;
-    unsigned                    f_num_rows;
-    unsigned                    f_num_columns;
+    unsigned                    f_num_rows    ;
+    unsigned                    f_num_columns ;
 
 };
 
