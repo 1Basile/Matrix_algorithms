@@ -83,10 +83,13 @@ public:
                               }
                           });
         }
+        max_elem_size += max_elem_size % 2 == 1 ? 1 : 0;
+
         for (auto line = matrix.f_matrix_table.begin(); line != matrix.f_matrix_table.end(); line++){
             out << "| ";
             for (auto elem = (*line).begin(); elem != (*line).end(); elem++){
-                out << std::setw(max_elem_size/2 ) << *elem << std::setw(max_elem_size/2) << " ";
+                int element_size = std::to_string(*elem).size();
+                out << std::setw((max_elem_size-element_size)/2) << "" << *elem << std::setw((max_elem_size-element_size)/2) << " ";
             }
             out << "|";
 //            if (line != matrix.f_matrix_table.end() - 1) { out << "\n"; }

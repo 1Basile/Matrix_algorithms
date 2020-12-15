@@ -13,10 +13,12 @@ Matrix<T>::Matrix(unsigned _rows_num, unsigned _cols_num, const T _initial[]){
 
     this->f_matrix_table.resize(_rows_num);
     // moving elements to new matrix
+    int k = 0;
     for (size_t i=0; i<_rows_num; i++) {
         this->f_matrix_table[i].resize(_cols_num);
         for (size_t j=0; j<_cols_num; j++) {
-            this->f_matrix_table[i][j] = _initial[i+j];
+            this->f_matrix_table[i][j] = _initial[k];
+            k++;
         }
     }
     f_num_rows = _rows_num;
@@ -124,11 +126,11 @@ void Matrix<T>::m_append_columns(size_t n, const T initial_value) {
 
 template <typename T>
 void Matrix<T>::m_append_rows(size_t n, const T initial_value) {
-    this->f_matrix_table.resize(this->m_cols_size() + n-1);
-    for (size_t i=0; i<n; i++) {
-        this->f_matrix_table[this->m_cols_size()+i-1]=vector<T>(this->m_cols_size(), initial_value);
-    }
+    this->f_matrix_table.resize(this->m_rows_size() + n);
     this->f_num_rows += n;
+    for (size_t i=0; i<n; i++) {
+        this->f_matrix_table[this->m_rows_size()-n+i]=vector<T>(this->m_cols_size(), initial_value);
+    }
 }
 
 template <typename T>
@@ -186,9 +188,11 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T>& other) const {
 
     for (unsigned i=0; i<other.f_num_rows; i++) {
         for (unsigned j=0; j<other.f_num_columns; j++) {
+            T sum = 0;
             for (unsigned k = 0; k < other.f_num_rows; k++) {
-                result(i, j) = this->f_matrix_table[i][k] * other(k, j);
+                sum += this->f_matrix_table[i][k] * other(k, j);
             }
+            result(i, j) += sum;
         }
     }
 
@@ -273,31 +277,75 @@ Matrix<T>  Matrix<T>::strassen_multiplication(const Matrix<T>& other) const {
         }
 
         size_diff = 0;
-        while ((this->m_cols_size()+size_diff)&(this->m_cols_size()+size_diff) != 0) { size_diff++; }
+        while ((first_matrix.m_cols_size()+size_diff)&(first_matrix.m_cols_size()-1+size_diff) != 0) { size_diff++; }
         first_matrix.m_append_columns(size_diff, 0);
         second_matrix.m_append_columns(size_diff, 0);
         first_matrix.m_append_rows(size_diff, 0);
         second_matrix.m_append_rows(size_diff, 0);
     }
 
-    Matrix<T> a_1_1 = first_matrix.m_get_submatrix(0, first_matrix.m_rows_size()/2,
-                                                   0, first_matrix.m_cols_size()/2);
-    Matrix<T> a_2_1 = ()
-    Matrix<T> a_1_2 = ()
-    Matrix<T> a_2_2 = ()
+    Matrix<T> a_1_1 = first_matrix.m_get_submatrix(0,                            first_matrix.m_rows_size()/2,
+                                                   0,                            first_matrix.m_cols_size()/2);
+    Matrix<T> a_2_1 = first_matrix.m_get_submatrix(first_matrix.m_rows_size()/2, first_matrix.m_rows_size(),
+                                                   0,                            first_matrix.m_cols_size()/2);
+    Matrix<T> a_1_2 = first_matrix.m_get_submatrix(0,                            first_matrix.m_rows_size()/2,
+                                                   first_matrix.m_cols_size()/2, first_matrix.m_cols_size());
+    Matrix<T> a_2_2 = first_matrix.m_get_submatrix(first_matrix.m_rows_size()/2, first_matrix.m_rows_size(),
+                                                   first_matrix.m_cols_size()/2, first_matrix.m_cols_size());
 
-    Matrix<T> b_1_1 = ()
-    Matrix<T> b_2_1 = ()
-    Matrix<T> b_1_2 = ()
-    Matrix<T> b_2_2 = ()
+    Matrix<T> b_1_1 = second_matrix.m_get_submatrix(0,                             second_matrix.m_rows_size()/2,
+                                                    0,                             second_matrix.m_cols_size()/2);
+    Matrix<T> b_2_1 = second_matrix.m_get_submatrix(second_matrix.m_rows_size()/2, second_matrix.m_rows_size(),
+                                                    0,                             second_matrix.m_cols_size()/2);
+    Matrix<T> b_1_2 = second_matrix.m_get_submatrix(0,                             second_matrix.m_rows_size()/2,
+                                                    second_matrix.m_cols_size()/2, second_matrix.m_cols_size());
+    Matrix<T> b_2_2 = second_matrix.m_get_submatrix(second_matrix.m_rows_size()/2, second_matrix.m_rows_size(),
+                                                    second_matrix.m_cols_size()/2, second_matrix.m_cols_size());
 
-    return first_matrix;
+    Matrix<T> m_1 = (a_1_1 + a_2_2).strassen_multiplication(b_1_1 + b_2_2);
+    Matrix<T> m_2 = (a_2_1 + a_2_2).strassen_multiplication(b_1_1);
+    Matrix<T> m_3 = a_1_1.strassen_multiplication(b_1_2 - b_2_2);
+    Matrix<T> m_4 = a_2_2.strassen_multiplication(b_2_1 - b_1_1);
+    Matrix<T> m_5 = (a_1_1 + a_1_2).strassen_multiplication(b_2_2);
+    Matrix<T> m_6 = (a_2_1 - a_1_1).strassen_multiplication(b_1_1 + b_1_2);
+    Matrix<T> m_7 = (a_1_2 - a_2_2).strassen_multiplication(b_2_1 + b_2_2);
+
+    Matrix<T> c_1_1 = m_1 + m_4 - m_5 + m_7;
+    Matrix<T> c_1_2 = m_3 + m_5;
+    Matrix<T> c_2_1 = m_2 + m_4;
+    Matrix<T> c_2_2 = m_1 - m_2 + m_3 + m_6;
+
+    // gather result(C) matrix
+    Matrix<T> result = c_1_1;
+    result.m_append_columns(result.m_cols_size());
+    result.m_append_rows(result.m_rows_size());
+        // c_2_2
+    for (int i=c_2_2.m_rows_size(); i < result.m_rows_size(); i++) {
+        for (int j=c_2_2.m_cols_size(); j < result.m_cols_size(); j++) {
+            result.f_matrix_table[i][j] = c_2_2.f_matrix_table[i-c_2_2.m_rows_size()][j-c_2_2.m_cols_size()];
+        }
+    }
+        // c_1_2
+    for (int i=0; i < c_1_2.m_rows_size(); i++) {
+        for (int j=c_1_2.m_cols_size(); j < result.m_cols_size(); j++) {
+            result(i, j) = c_1_2(i, j-c_1_2.m_cols_size());
+        }
+    }
+        // c_2_1
+    for (int i=c_2_1.m_rows_size(); i < result.m_rows_size(); i++) {
+        for (int j=0; j < c_2_1.m_cols_size(); j++) {
+            result(i, j) = c_1_2(i-c_2_1.m_rows_size(), j);
+        }
+    }
+
+
+    return result;
 }
 
 // vector operators
 template<typename T>
 std::vector<T> Matrix<T>::operator*(const std::vector<T>& vect) const {
-    std::vector<T> result(vect.size(), 0.0);
+    std::vector<T> result(this->f_num_rows, 0.0);
 
     for (unsigned i=0; i<this->f_num_rows; i++) {
         for (unsigned j = 0; j < this->f_num_columns; j++) {
@@ -372,4 +420,14 @@ Matrix<T> Matrix<T>::operator/(const T& scalar) const noexcept {
     }
 
     return result;
+}
+
+// Overloading vector printing
+template<typename T>
+inline std::ostream& operator<< (std::ostream& out, const std::vector<T>& vector){
+    out << "( ";
+    std::copy(vector.begin(), vector.end(),
+              std::ostream_iterator<T>(out, ", "));
+    out << ")" << std::endl;
+    return out;
 }
