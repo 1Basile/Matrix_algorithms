@@ -57,7 +57,7 @@ public:
     std::vector<T> diag_vec()  const noexcept;
 
     // Access the individual elements
-    T& operator()(const unsigned& row, const unsigned& col) noexcept;
+    T& operator()(const unsigned& row, const unsigned& col)             noexcept;
     const T& operator()(const unsigned& row, const unsigned& col) const noexcept;
 
     // Access the row and column sizes
@@ -97,6 +97,7 @@ public:
         }
         return out;
 }
+    // vector printing in .cpp
 
 private:
     std::vector<std::vector<T>> f_matrix_table;
