@@ -24,6 +24,7 @@ int main() {
     coppied_matrix -= test_matrix;
 
     // access tests
+    std::cout << "Access tests: " << std::endl;
     vector<T> test_row = coppied_matrix.row(1);
     vector<T> test_column = coppied_matrix.column(1);
     std::copy(test_row.begin(), test_row.end(),
@@ -46,15 +47,40 @@ int main() {
 
     // Strassen matrix algo test
     {
-//        T matrix[] = {2, 3,
-//                      9, 10};
-//        T matrix_2[] = {4, 3,
-//                        9, 10};
-//        Matrix<T> test_matrix(2, 2, matrix);
-//        Matrix<T> test_matrix_2(2, 2, matrix_2);
         std::cout << "Strassen matrix algo test: " << std::endl;
         std::cout << (test_matrix) * (test_matrix_2) << std::endl;
         std::cout << (test_matrix).strassen_multiplication(test_matrix_2) << std::endl;
+    }
+
+    // Cholesky decomposition test
+    {
+        T matrix[] = {  4,  12, -16,
+                       12,  37, -43,
+                      -16, -43,  98};
+        vector<T> b_coefficients= {1, 2, 3};
+        Matrix<T> test_matrix(3, 3, matrix);
+        std::cout << "Cholesky decomposition test: " << std::endl;
+        std::cout << test_matrix << std::endl;
+        std::cout << test_matrix.cholesky_decomposition()  << std::endl;
+        std::cout << solve_system_by_cholesky_decomposition(test_matrix, b_coefficients);
+
+
+    }
+
+    // matrix comparison tests && matrix properties test
+    {
+        T matrix[] = {  4,  12, -16,
+                        12,  37, -43,
+                        -16, -43,  98};
+        Matrix<T> test_matrix(3, 3, matrix);
+        std::cout << "Matrix : " << std::endl;
+        std::cout << test_matrix << std::endl;
+        std::cout << "Matrix comparison test: " << std::endl;
+        std::cout << (test_matrix == test_matrix.transpose()) << std::endl;
+        std::cout << "Matrix symmetric test: " << std::endl;
+        std::cout << (test_matrix.is_symmetric()) << std::endl;
+
+
     }
 
     // -, *, +, << tests

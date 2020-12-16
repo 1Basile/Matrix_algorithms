@@ -1,5 +1,7 @@
 #include "Matrix.h"
 #include <algorithm>
+#include <cmath>
+#include <iterator>
 
 using namespace std;
 
@@ -113,6 +115,17 @@ const T& Matrix<T>::operator()(const unsigned& row, const unsigned& col) const n
     if (f_num_columns <= col || f_num_rows <= row) {
         throw out_of_range("Out of range exception.\nIndexing starting at (0,0)."); }
     return this->f_matrix_table[row][col];
+}
+
+// matrix comperisson
+template<typename T>
+bool Matrix<T>::operator==(const Matrix<T>& other) const noexcept {
+    for (int i=0; i < this->m_rows_size(); i++) {
+        for (int j=0; j < this->m_rows_size(); j++) {
+            if (this->f_matrix_table[i][j] != other(i, j)) { return false;}
+        }
+    }
+    return true;
 }
 
 // matrix operators
@@ -252,6 +265,15 @@ Matrix<T> Matrix<T>::transpose() {
     return result;
 }
 
+template<typename T>
+bool Matrix<T>::is_symmetric() {
+    Matrix<T> transposed = this->transpose();
+    if (this->operator==(transposed)) {
+        return true;
+    }
+    return false;
+}
+
 // some algorithms
 template<typename T>
 Matrix<T>  Matrix<T>::strassen_multiplication(const Matrix<T>& other) const {
@@ -340,6 +362,59 @@ Matrix<T>  Matrix<T>::strassen_multiplication(const Matrix<T>& other) const {
 
 
     return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::cholesky_decomposition() {
+    if (!this->is_symmetric()) { throw MatrixPropertiesException(); }
+
+    T empty_list[this->f_num_rows*this->f_num_columns] = {  };
+    Matrix<T> L(this->f_num_rows, this->f_num_columns, empty_list);
+
+    // get diagonal elements
+    for (int i=0;i<this->m_rows_size() && i<this->m_cols_size(); i++) {
+        for (int j=0;j<=i; j++) {
+            int sum = 0;
+
+            if (i==j) {
+                for (int k=0; k<i;k++) { sum += L(i, k)*L(i, k); }
+                L(i, i) = sqrt(this->f_matrix_table[i][i] - sum);
+            }
+            else {
+                for (int k=0; k<j;k++) { sum += L(i, k)*L(j, k); }
+                L(i, j) = (this->f_matrix_table[i][j] - sum)/L(j, j);
+            }
+        }
+
+    }
+    return L;
+
+}
+
+template<typename T>
+std::vector<double> solve_system_by_cholesky_decomposition(Matrix<T>& coefficient_matrix, std::vector<T>& b_vectors) {
+    Matrix<T> L = coefficient_matrix.cholesky_decomposition();
+    Matrix<T> L_T = coefficient_matrix.cholesky_decomposition().transpose();
+    vector<double> y(b_vectors.size(), 0);
+    vector<double> x(b_vectors.size(), 0);
+    for (int i=0; i < y.size(); ++i) {
+        double sum = 0;
+        for (int j=0; j<i; j++) {
+            sum += y[j]*L(i,j);
+        }
+        cout << ((double)(b_vectors[i] - sum)/L(i, i)) << endl;
+        y[i] = (double)(b_vectors[i] - sum)/L(i, i);
+    }
+
+    for (int i=x.size()-1; i>=0 ; i--) {
+        double sum = 0;
+        for (int j=x.size()-1; j>i; j--) {
+            sum += x[j]*L_T(i, j);
+        }
+        x[i] = (y[i] - sum)/L_T(i, i);
+    }
+
+    return x;
 }
 
 // vector operators

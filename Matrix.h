@@ -16,6 +16,12 @@ class MatrixDimensionalException : public std::exception {
     }
 };
 
+class MatrixPropertiesException : public std::exception {
+    const char * what () const noexcept override
+    {
+        return "Matrix doesn`t have necessary properties. Operation is impossible.";
+    }
+};
 template <typename T>
 class Matrix {
 public:
@@ -25,7 +31,7 @@ public:
     virtual ~Matrix();
 
     // Comparison
-//    bool       operator==(const Matrix<T>&) const noexcept;
+    bool       operator==(const Matrix<T>&) const noexcept;
 //    bool       operator>(const Matrix<T>&)  const noexcept;
 //    bool       operator<(const Matrix<T>&)  const noexcept;
 
@@ -40,9 +46,11 @@ public:
 
     // Some matrix algorithms
     Matrix<T>  strassen_multiplication(const Matrix<T>&)   const ;
+    Matrix<T>  cholesky_decomposition()                          ;
 
-    // Matrix operations
+    // Matrix operations & properties
     Matrix<T>  transpose();
+    bool       is_symmetric();
     void       m_append_rows(size_t n, T initial_value=0);
     void       m_append_columns(size_t n, T initial_value=0);
 
@@ -105,6 +113,9 @@ private:
     unsigned                    f_num_columns ;
 
 };
+
+template<typename T>
+std::vector<double> solve_system_by_cholesky_decomposition(Matrix<T>&, std::vector<T>&);
 
 
 #endif //MATRIX_MATRIX_H
